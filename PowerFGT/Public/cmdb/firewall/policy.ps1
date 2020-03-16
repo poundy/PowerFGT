@@ -82,6 +82,8 @@ function Add-FGTFirewallPolicy {
         [Parameter (Mandatory = $false)]
         [string[]]$service = "ALL",
         [Parameter (Mandatory = $false)]
+        [string[]]$policyid,
+        [Parameter (Mandatory = $false)]
         [switch]$nat = $false,
         [Parameter (Mandatory = $false)]
         [ValidateLength(0, 255)]
@@ -123,6 +125,12 @@ function Add-FGTFirewallPolicy {
             if ($settings.'gui-allow-unnamed-policy' -eq "disable") {
                 throw "You need to specifiy a name"
             }
+        }
+
+        if ( $PsBoundParameters.ContainsKey('policyid') ) {
+			if ( Get-FGTFirewallPolicy -connection $connection @invokeParams -policyid [string]$policyid ) {
+				Throw "Already a Policy using the same ID"
+			}
         }
 
         $uri = "api/v2/cmdb/firewall/policy"
@@ -195,6 +203,10 @@ function Add-FGTFirewallPolicy {
         else {
 
             $policy | add-member -name "nat" -membertype NoteProperty -Value "disable"
+        }
+
+        if ( $PsBoundParameters.ContainsKey('policyid') ) {
+            $policy | add-member -name "policyid" -membertype NoteProperty -Value $policyid
         }
 
         if ( $PsBoundParameters.ContainsKey('comments') ) {
